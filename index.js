@@ -1,34 +1,54 @@
-var inputvalue = document.querySelector('#cityinput')
-var btn = document.querySelector('#add');
-var city = document.querySelector('#cityoutput')
-var descrip = document.querySelector('#description')
-var temp = document.querySelector('#temp')
-var wind = document.querySelector('#wind')
-apik ="63a90ae96d390ec37d6c1252f5a86e1a"
-function convertion(val)
-{
-    return (val - 273).toFixed(3)
+const inputvalue = document.querySelector('#cityinput');
+const btn = document.querySelector('#add');
+const city = document.querySelector('#cityoutput');
+const description = document.querySelector('#description span');
+const temp = document.querySelector('#temp span');
+const wind = document.querySelector('#wind span');
+
+// Replace with your own OpenWeatherMap API key
+const API_KEY = "63a90ae96d390ec37d6c1252f5a86e1a";
+
+// Convert temperature from Kelvin to Celsius
+function convertToCelsius(val) {
+    return (val - 273.15).toFixed(2);
 }
 
-btn.addEventListener('click', function()
-{
-  fetch('https://api.openweathermap.org/data/2.5/weather?q='+inputvalue.value+'&appid='+apik)
-  .then(res => res.json())
+// Add event listener to the button
+btn.addEventListener('click', function () {
+    const cityName = inputvalue.value.trim();
 
-  .then(data => 
-  {
-    var nameval = data['name']
-    var descrip = data['weather']['0']['description']
-    var tempature = data['main']['temp']
-    var wndspeed = data['wind']['speed']
+    if (!cityName) {
+        alert('Please enter a city or village name.');
+        return;
+    }
 
+    // Display loading state
+    city.innerHTML = `Fetching weather for <span>${cityName}</span>...`;
+    description.textContent = '--';
+    temp.textContent = '--';
+    wind.textContent = '--';
 
-    city.innerHTML=`Weather of <span>${nameval}<span>`
-    temp.innerHTML = `Temperature: <span>${ convertion(tempature)} C</span>`
-    description.innerHTML = `Sky Conditions: <span>${descrip}<span>`
-    wind.innerHTML = `Wind Speed: <span>${wndspeed} km/h<span>`
+    // Fetch weather data with country code IN (India)
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName},IN&appid=${API_KEY}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Location not found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const nameval = data.name;
+            const weatherDescription = data.weather[0].description;
+            const temperature = data.main.temp;
+            const windSpeed = data.wind.speed;
 
-  })
-
-  .catch(err => alert('You entered Wrong city name'))
-})
+            city.innerHTML = `Weather of <span>${nameval}</span>`;
+            description.textContent = weatherDescription;
+            temp.textContent = `${convertToCelsius(temperature)} °C`;
+            wind.textContent = `${windSpeed} km/h`;
+        })
+        .catch(err => {
+            city.innerHTML = 'Error';
+            alert('Location not found. Please enter a valid city or village name in India.');
+        });
+});
